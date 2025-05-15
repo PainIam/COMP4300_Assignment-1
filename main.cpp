@@ -9,8 +9,8 @@ int main (int argc, char* argv[])
     // create a new window of size w by h pixels
     // top-left of windows is (0,0) and bottom-right is (w,h)
     std::ifstream file("./config.txt");                   //declare input stream variable
-    if (!file.is_open()) exit(-1);          //could not exit file
-    std::string word;                       //iss >> word
+    if (!file.is_open()) exit(-1);                        //could not exit file
+    std::string word;                                     //iss >> word
     std::string line;
 
     int wWidth = 640;
@@ -54,6 +54,7 @@ int main (int argc, char* argv[])
         float radius;
         std::string Sname;                  // shape name
         int r, g, b;
+        float width, height;
         iss >> word;
 
         if (word == "Circle")
@@ -67,6 +68,17 @@ int main (int argc, char* argv[])
             circles.back().setRadius(radius);
             circles.back().setPosition(sf::Vector2f(iniX,iniY));
             circles.back().setFillColor(sf::Color(r, g, b));
+        } else if (word == "Rectangle")
+        {
+            rectangles.emplace_back();
+            iss >> Sname;
+            iss >> iniX >> iniY;
+            iss >> iniSpeedX >> iniSpeedY;
+            iss >> r >> g >> b;
+            iss >> width >> height;
+            rectangles.back().setSize(sf::Vector2f(width, height));
+            rectangles.back().setFillColor(sf::Color(r, g, b));
+            rectangles.back().setPosition(sf::Vector2f(iniX, iniY));
         }
     }
 
@@ -137,12 +149,14 @@ int main (int argc, char* argv[])
         + circleMoveSpeed);
 
         //  basic rendering funcion calls
-        window.clear();         //clear buffer
-        // window.draw(circle);    //draw
+        window.clear();                      //clear buffer
+        // window.draw(circle);             //draw
         for (const auto& p : circles)
             window.draw(p);
+        for (const auto& x : rectangles)
+            window.draw(x);
         window.draw(text);
-        window.display();       //call the window display function 
+        window.display();                   //call the window display function 
     }
 
 }
