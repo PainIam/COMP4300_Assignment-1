@@ -37,6 +37,10 @@ int main (int argc, char* argv[])
     circle.setFillColor(sf::Color(255, 255, 0));  //set the circle color to green
     circle.setPosition(300.0f, 300.0f);     //set the top-left position of the circle
     float circleMoveSpeed = 0.95f;          // use t move the circle later
+    float CmoveSpeedX = 0.0f;
+    float CmoveSpeedY = 0.0f;
+    float RmoveSpeedX = 0.0f;
+    float RmoveSpeedY = 0.0f;
 
     // let's declare arrays to store these shapes
     std::vector<sf::CircleShape> circles;
@@ -49,8 +53,6 @@ int main (int argc, char* argv[])
         std::istringstream iss(line);
         float iniX;                         //initial position at X
         float iniY;                         // initial position at Y
-        float iniSpeedX;                    // initial speed towards the X-axis
-        float iniSpeedY;                    // initial speed towards the Y-axis
         float radius;
         std::string Sname;                  // shape name
         int r, g, b;
@@ -62,7 +64,7 @@ int main (int argc, char* argv[])
             circles.emplace_back();
             iss >> Sname;                   //shape name
             iss >> iniX >> iniY;            //shape pos
-            iss >> iniSpeedX >> iniSpeedY;  //shape speed
+            iss >> CmoveSpeedX >> CmoveSpeedY;  //shape speed
             iss >> r >> g  >> b;            // shape color
             iss >> radius;
             circles.back().setRadius(radius);
@@ -73,7 +75,7 @@ int main (int argc, char* argv[])
             rectangles.emplace_back();
             iss >> Sname;
             iss >> iniX >> iniY;
-            iss >> iniSpeedX >> iniSpeedY;
+            iss >> RmoveSpeedX >> RmoveSpeedY;
             iss >> r >> g >> b;
             iss >> width >> height;
             rectangles.back().setSize(sf::Vector2f(width, height));
@@ -82,6 +84,7 @@ int main (int argc, char* argv[])
         }
     }
 
+    file.close();
 
     // let's load a font so we can display some text
     sf::Font myFont;
@@ -144,13 +147,19 @@ int main (int argc, char* argv[])
             }
         }
 
-        // basic animation  move each frame if it's still in frame
-        circle.setPosition(circle.getPosition().x + circleMoveSpeed, circle.getPosition().y 
-        + circleMoveSpeed);
+        // basic animation
+        for (auto& i : circles)
+        {
+            i.setPosition(i.getPosition().x + CmoveSpeedX, i.getPosition().y + CmoveSpeedY);
+        }
+
+        for (auto& i : rectangles)
+        {
+            i.setPosition(i.getPosition().x + RmoveSpeedX, i.getPosition().y + RmoveSpeedY);
+        }
 
         //  basic rendering funcion calls
         window.clear();                      //clear buffer
-        // window.draw(circle);             //draw
         for (const auto& p : circles)
             window.draw(p);
         for (const auto& x : rectangles)
