@@ -36,11 +36,9 @@ int main (int argc, char* argv[])
     sf::CircleShape circle(50);             //create a circle shape with radius 50
     circle.setFillColor(sf::Color(255, 255, 0));  //set the circle color to green
     circle.setPosition(300.0f, 300.0f);     //set the top-left position of the circle
-    float circleMoveSpeed = 0.95f;          // use t move the circle later
-    float CmoveSpeedX = 0.0f;
-    float CmoveSpeedY = 0.0f;
-    float RmoveSpeedX = 0.0f;
-    float RmoveSpeedY = 0.0f;
+    std::vector <sf::Vector2f> Cspeed;
+    std::vector <sf::Vector2f> Rspeed;
+    float radius;
 
     // let's declare arrays to store these shapes
     std::vector<sf::CircleShape> circles;
@@ -53,7 +51,8 @@ int main (int argc, char* argv[])
         std::istringstream iss(line);
         float iniX;                         //initial position at X
         float iniY;                         // initial position at Y
-        float radius;
+        float SpeedX;
+        float SpeedY;
         std::string Sname;                  // shape name
         int r, g, b;
         float width, height;
@@ -64,23 +63,25 @@ int main (int argc, char* argv[])
             circles.emplace_back();
             iss >> Sname;                   //shape name
             iss >> iniX >> iniY;            //shape pos
-            iss >> CmoveSpeedX >> CmoveSpeedY;  //shape speed
+            iss >> SpeedX >> SpeedY;        //shape speed
             iss >> r >> g  >> b;            // shape color
             iss >> radius;
             circles.back().setRadius(radius);
             circles.back().setPosition(sf::Vector2f(iniX,iniY));
             circles.back().setFillColor(sf::Color(r, g, b));
+            Cspeed.emplace_back(sf::Vector2f(SpeedX, SpeedY));
         } else if (word == "Rectangle")
         {
             rectangles.emplace_back();
             iss >> Sname;
             iss >> iniX >> iniY;
-            iss >> RmoveSpeedX >> RmoveSpeedY;
+            iss >> SpeedX >> SpeedY;
             iss >> r >> g >> b;
             iss >> width >> height;
             rectangles.back().setSize(sf::Vector2f(width, height));
             rectangles.back().setFillColor(sf::Color(r, g, b));
             rectangles.back().setPosition(sf::Vector2f(iniX, iniY));
+            Rspeed.emplace_back(sf::Vector2f(SpeedX, SpeedY));
         }
     }
 
@@ -131,33 +132,44 @@ int main (int argc, char* argv[])
             {
                 window.close();
             }
-
-            // ts event is triggered when a key is pressed
-            if (event.type == sf::Event::KeyPressed)
-            {
-                // print the key that was pressed to the console
-                std::cout << "key pressed with code = " << event.key.code << "\n";
-
-                // example, what happens when x is pressed
-                if (event.key.code == sf::Keyboard::X)
-                {
-                    // reverse the direction of the circle on the screen
-                    circleMoveSpeed *= -1.0f;
-                }
-            }
+            
         }
 
         // basic animation
-        for (auto& i : circles)
+        for (std::size_t i = 0; i < circles.size(); i++)
         {
-            i.setPosition(i.getPosition().x + CmoveSpeedX, i.getPosition().y + CmoveSpeedY);
+            circles[i].setPosition(circles[i].getPosition().x + Cspeed[i].x, circles[i].getPosition().y + Cspeed[i].y);
         }
 
-        for (auto& i : rectangles)
+        for (std::size_t i = 0; i < rectangles.size(); i++)
         {
-            i.setPosition(i.getPosition().x + RmoveSpeedX, i.getPosition().y + RmoveSpeedY);
+            rectangles[i].setPosition(rectangles[i].getPosition().x + Rspeed[i].x, rectangles[i].getPosition().y + Rspeed[i].y);
         }
 
+        // illusion of collision
+        for (std::size_t i = 0; i < circles.size(); i++)
+        {
+            if ((circles[i].getPosition().x + circles[i].getLocalBounds().width) > wWidth)
+                Cspeed[i].x *= -1;
+            if ((circles[i].getPosition().y + circles[i].getLocalBounds().height) > wHeight)
+                Cspeed[i].y *= -1;
+            if (circles[i].getPosition().y  < 0)
+                Cspeed[i].y *= -1;
+            if (circles[i].getPosition().x < 0)
+                Cspeed[i].x *= -1;
+        }
+
+        for (std::size_t i = 0; i < rectangles.size(); i++)
+        {
+            if ((rectangles[i].getPosition().x + rectangles[i].getLocalBounds().width) > wWidth)
+                Rspeed[i].x *= -1;
+            if ((rectangles[i].getPosition().y + rectangles[i].getLocalBounds().height) > wHeight)
+                Rspeed[i].y *= -1;
+            if (rectangles[i].getPosition().y  < 0)
+                Rspeed[i].y *= -1;
+            if (rectangles[i].getPosition().x  < 0)
+                Rspeed[i].x *= -1;
+        }
         //  basic rendering funcion calls
         window.clear();                      //clear buffer
         for (const auto& p : circles)
