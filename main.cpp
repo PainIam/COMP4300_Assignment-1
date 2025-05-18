@@ -1,16 +1,15 @@
 #include <SFML/Graphics.hpp>
 #include <iostream>
 #include <fstream>
-#include <sstream> // stream tockenizing
+#include <sstream>
 #include <vector>
 
 int main (int argc, char* argv[])
 {
-    // create a new window of size w by h pixels
-    // top-left of windows is (0,0) and bottom-right is (w,h)
+
     std::ifstream file("./config.txt");                   //declare input stream variable
-    if (!file.is_open()) exit(-1);                        //could not exit file
-    std::string word;                                     //iss >> word
+    if (!file.is_open()) exit(-1);                        
+    std::string word;                                     
     std::string line;
 
     int wWidth = 640;
@@ -38,11 +37,38 @@ int main (int argc, char* argv[])
     circle.setPosition(300.0f, 300.0f);     //set the top-left position of the circle
     std::vector <sf::Vector2f> Cspeed;
     std::vector <sf::Vector2f> Rspeed;
+    std::vector <sf::Text> Rtexts;
+    std::vector <sf::Text> Ctexts;
     float radius;
 
     // let's declare arrays to store these shapes
     std::vector<sf::CircleShape> circles;
     std::vector<sf::RectangleShape> rectangles;
+
+        // let's load a font so we can display some text
+    sf::Font myFont;
+    int red, green, blue;
+    int fontSize;
+    file.open("config.txt");
+    while (std::getline(file, line))
+    {
+        std::istringstream iss(line);
+        std::string name;
+        iss >> word;
+
+        if (word == "Font")
+        {
+            iss >> name >> fontSize >> red >> green >> blue;
+
+            if (!myFont.loadFromFile(name))
+            {
+                std::cout << "could not load font!\n";
+                exit(-1);
+            }
+        }
+        
+    }
+    file.close();
 
     // let's try and load shapes
     file.open("config.txt");
@@ -66,6 +92,11 @@ int main (int argc, char* argv[])
             iss >> SpeedX >> SpeedY;        //shape speed
             iss >> r >> g  >> b;            // shape color
             iss >> radius;
+            Ctexts.emplace_back();
+            Ctexts.back().setFont(myFont);
+            Ctexts.back().setString(Sname);
+            Ctexts.back().setFillColor(sf::Color(red, green, blue));
+            Ctexts.back().setCharacterSize(fontSize);
             circles.back().setRadius(radius);
             circles.back().setPosition(sf::Vector2f(iniX,iniY));
             circles.back().setFillColor(sf::Color(r, g, b));
@@ -78,6 +109,11 @@ int main (int argc, char* argv[])
             iss >> SpeedX >> SpeedY;
             iss >> r >> g >> b;
             iss >> width >> height;
+            Rtexts.emplace_back();
+            Rtexts.back().setFont(myFont);
+            Rtexts.back().setString(Sname);
+            Rtexts.back().setFillColor(sf::Color(red, green, blue));
+            Rtexts.back().setCharacterSize(fontSize);
             rectangles.back().setSize(sf::Vector2f(width, height));
             rectangles.back().setFillColor(sf::Color(r, g, b));
             rectangles.back().setPosition(sf::Vector2f(iniX, iniY));
@@ -86,39 +122,6 @@ int main (int argc, char* argv[])
     }
 
     file.close();
-
-    // let's load a font so we can display some text
-    sf::Font myFont;
-    int fontSize, r, g, b;
-    file.open("config.txt");
-    while (std::getline(file, line))
-    {
-        std::istringstream iss(line);
-        std::string name;
-        iss >> word;
-
-        if (word == "Font")
-        {
-            iss >> name >> fontSize >> r >> g >> b;
-
-            if (!myFont.loadFromFile(name))
-            {
-                std::cout << "could not load font!\n";
-                exit(-1);
-            }
-        }
-        
-    }
-    file.close();
-
-
-    // set up the text object that will be drawn to the screen
-    sf::Text text("Sample Text", myFont, fontSize);
-    text.setFillColor(sf::Color(r, g, b));
-
-    // position the top-left corner of the text so that the text aligns on the bottom
-    // text character size is int pixels, so move the text up from the bottom by its height
-    text.setPosition(0, wHeight - (float)text.getCharacterSize());
 
     //  main loop - continues for each frame while window.isOpen()
     while (window.isOpen())
@@ -145,6 +148,33 @@ int main (int argc, char* argv[])
         {
             rectangles[i].setPosition(rectangles[i].getPosition().x + Rspeed[i].x, rectangles[i].getPosition().y + Rspeed[i].y);
         }
+
+        for (std::size_t i = 0; i < Ctexts.size(); i++)
+        {
+            sf::Vector2f center = {circles[i].getPosition().x + circles[i].getRadius(), circles[i].getPosition().y + circles[i].getRadius()};
+
+            sf::FloatRect txt = Ctexts[i].getLocalBounds();
+
+            Ctexts[i].setPosition(
+                center.x - txt.width / 2.0f,
+                center.y - txt.height / 2.0f - txt.top
+            );
+            
+        }
+
+        for (std::size_t i = 0; i < Rtexts.size(); i++)
+        {
+            sf::Vector2f center = rectangles[i].getPosition() + rectangles[i].getSize()  / 2.0f;
+
+            sf::FloatRect txt = Rtexts[i].getLocalBounds();
+
+            Rtexts[i].setPosition(
+                center.x - txt.width / 2.0f,
+                center.y - txt.height / 2.0f - txt.top
+            );
+            
+        }
+
 
         // illusion of collision
         for (std::size_t i = 0; i < circles.size(); i++)
@@ -176,7 +206,10 @@ int main (int argc, char* argv[])
             window.draw(p);
         for (const auto& x : rectangles)
             window.draw(x);
-        window.draw(text);
+        for (const auto& t: Rtexts)
+            window.draw(t);
+        for (const auto& t: Ctexts)
+            window.draw(t);
         window.display();                   //call the window display function 
     }
 
